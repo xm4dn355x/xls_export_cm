@@ -69,7 +69,7 @@ def create_xls(data):
     borders.right = 1
     borders.top = 1
     borders.bottom = 1
-    header_style.borders, data_style.borders, tt_id_style.borders = borders, borders, borders
+    header_style.borders = data_style.borders = tt_id_style.borders = borders
 
 
     # Creating text alignment
