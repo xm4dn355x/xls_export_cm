@@ -9,6 +9,7 @@
 #####################################################################################################################
 
 
+import copy
 import psycopg2
 import xlwt
 from configs import DB_CONFIG
@@ -52,9 +53,7 @@ def create_xls(data):
 
     # Data rows styles. Inherits Header style.
     data_style = xlwt.XFStyle()
-    data_font = xlwt.Font()
-    data_font.name = header_font.name
-    data_font.colour_index = header_font.colour_index
+    data_font = copy.deepcopy(header_font)
     data_font.bold = False
     data_font.height = 240
     data_style.font = data_font
@@ -70,9 +69,8 @@ def create_xls(data):
     borders.right = 1
     borders.top = 1
     borders.bottom = 1
-    header_style.borders = borders
-    data_style.borders = borders
-    tt_id_style.borders = borders
+    header_style.borders, data_style.borders, tt_id_style.borders = borders, borders, borders
+
 
     # Creating text alignment
     al = xlwt.Alignment()
@@ -85,33 +83,24 @@ def create_xls(data):
     tt_id_style.alignment = al
 
     # Table Header declaration
-    sheet.write(0, 0, '№', header_style)
-    sheet.write(0, 1, 'ТамТам id', header_style)
-    sheet.write(0, 2, 'ТамТам имя пользователя', header_style)
-    sheet.write(0, 3, 'ФИО', header_style)
-    sheet.write(0, 4, 'Департамент', header_style)
-    sheet.write(0, 5, 'Должность', header_style)
-    sheet.write(0, 6, 'Чаты', header_style)
+    header = ['№', 'ТамТам id', 'ТамТам имя пользователя', 'ФИО', 'Департамент', 'Должность', 'Чаты']
+    header_width = [1455, 4400, 8200, 10900, 14200, 24500, 3275]
+    for i in range(len(header)):
+        sheet.write(0, i, header[i], header_style)
+        sheet.col(i).width = header_width[i]
     sheet.row(1).height = 2500
-    sheet.col(0).width = 1455
-    sheet.col(1).width = 4400
-    sheet.col(2).width = 8200
-    sheet.col(3).width = 10900
-    sheet.col(4).width = 14200
-    sheet.col(5).width = 24500
-    sheet.col(6).width = 3275
 
     # Adding data rows
     i = 1
     for d in data:
         sheet.row(i+1).height = 2500
-        sheet.write(i, 0, i, data_style)
-        sheet.write(i, 1, d['user_id'], tt_id_style)
-        sheet.write(i, 2, d['username'], data_style)
-        sheet.write(i, 3, d['fio'], data_style)
-        sheet.write(i, 4, d['dep'], data_style)
-        sheet.write(i, 5, d['pos'], data_style)
-        sheet.write(i, 6, d['chats'], data_style)
+        cols = [i, 'user_id', 'username', 'fio', 'dep', 'pos', 'chats']
+        for col in range(len(cols)):
+            if col == 1:
+                style = tt_id_style
+            else:
+                style = data_style
+            sheet.write(i, col, d[col], style)
         i = i + 1
 
     # Save XLS document
@@ -121,5 +110,4 @@ def create_xls(data):
 
 
 if __name__ == '__main__':
-    data = get_data_from_db()
-    xls = create_xls(data)
+    create_xls(get_data_from_db())
